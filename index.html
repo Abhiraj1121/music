@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Cognix 3D Audio Visualizer</title>
+    <meta name="description" content="Professional 3D audio-reactive visualizer by Abhi Raj Singh, Cognix Studio.">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/cognix-favicon-32.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="assets/cognix-favicon-64.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/cognix-favicon-180.png">
+
+    <!-- Import Map for Three.js -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <canvas id="visualizer-canvas"></canvas>
+
+    <!-- Drag & drop overlay -->
+    <div id="dropzone-overlay">
+        <div class="dropzone-inner">
+            <div class="dropzone-icon">🎧</div>
+            <p>Drop an audio file to visualize</p>
+        </div>
+    </div>
+
+    <!-- Boot / loading overlay -->
+    <div id="boot-overlay">
+        <div class="boot-card">
+            <img src="assets/cognix-logo.png" alt="Cognix Studio" class="boot-logo-img">
+            <h1>Cognix <span>3D Audio Visualizer</span></h1>
+            <p class="boot-sub">Real-time, audio-reactive WebGL visuals</p>
+            <div class="boot-actions">
+                <button id="boot-btn-file" class="btn-primary">📁 Choose an audio file</button>
+                <button id="boot-btn-mic" class="btn-secondary">🎤 Use microphone</button>
+                <button id="boot-btn-tab" class="btn-secondary">🖥️ Capture tab audio</button>
+                <button id="boot-btn-skip" class="btn-ghost">Skip — explore presets first</button>
+            </div>
+            <p class="boot-credit">Developed by <strong>Abhi Raj Singh</strong> · Cognix Studio</p>
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div id="toast-container"></div>
+
+    <!-- Top HUD (FPS / BPM / Level) -->
+    <div id="hud" class="hidden">
+        <div class="hud-item" title="Frames per second">
+            <span class="hud-label">FPS</span><span class="hud-value" id="hud-fps">--</span>
+        </div>
+        <div class="hud-item" title="Estimated tempo">
+            <span class="hud-label">BPM</span><span class="hud-value" id="hud-bpm">--</span>
+        </div>
+        <div class="hud-item hud-level" title="Input level">
+            <span class="hud-label">LVL</span>
+            <span class="hud-meter"><span class="hud-meter-fill" id="hud-level-fill"></span></span>
+        </div>
+    </div>
+
+    <!-- UI Overlay -->
+    <div id="ui-container">
+        <header>
+            <div class="header-top">
+                <div class="header-brand">
+                    <img src="assets/cognix-favicon-64.png" alt="Cognix" class="header-logo">
+                    <h1>Cognix Visualizer</h1>
+                </div>
+                <button id="btn-toggle-ui" class="icon-btn" title="Hide UI (H)">✕</button>
+            </div>
+            <div class="audio-status" id="audio-status">No audio source</div>
+            <canvas id="mini-waveform" width="300" height="36"></canvas>
+        </header>
+
+        <div class="controls-panel">
+
+            <details class="control-group" open>
+                <summary>🎧 Audio Source</summary>
+                <div class="summary-content">
+                    <div class="source-buttons">
+                        <button id="btn-capture-mic" title="Use microphone">🎤 Mic</button>
+                        <button id="btn-capture-tab" title="Capture tab audio">🖥️ Tab</button>
+                        <div class="file-upload">
+                            <label for="audio-upload" class="upload-btn" title="Upload audio file">📁 File</label>
+                            <input type="file" id="audio-upload" accept="audio/*">
+                        </div>
+                    </div>
+
+                    <div class="control-group playback-controls" style="display: none;" id="playback-controls">
+                        <div class="track-scrubber">
+                            <span id="time-current">0:00</span>
+                            <input type="range" id="seek-slider" min="0" max="1000" step="1" value="0">
+                            <span id="time-duration">0:00</span>
+                        </div>
+                        <div class="playback-row">
+                            <button id="btn-play-pause" class="icon-btn-lg">⏸</button>
+                            <div class="volume-control">
+                                <label>🔊 Volume</label>
+                                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.8">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <details class="control-group" open>
+                <summary>🌌 Visualizer Preset</summary>
+                <div class="summary-content">
+                    <div id="preset-gallery" class="preset-gallery"></div>
+
+                    <div class="setting-item auto-cycle-row">
+                        <label for="auto-cycle">🔀 Auto-cycle presets</label>
+                        <input type="checkbox" id="auto-cycle">
+                    </div>
+                    <div class="setting-item" id="auto-cycle-interval-row" style="display:none;">
+                        <label>Interval <span id="auto-cycle-interval-val">20s</span></label>
+                        <input type="range" id="auto-cycle-interval" min="5" max="60" step="5" value="20">
+                    </div>
+                </div>
+            </details>
+
+            <details class="control-group" open>
+                <summary>⚙️ Settings</summary>
+                <div class="summary-content">
+                    <div class="setting-item">
+                        <label>Sensitivity <span id="sensitivity-val">1.0</span></label>
+                        <input type="range" id="sensitivity-slider" min="0" max="2" step="0.1" value="1.0">
+                    </div>
+                    <div class="setting-item row-item">
+                        <label>Color Theme</label>
+                        <input type="color" id="primary-color" value="#00ffff">
+                    </div>
+                    <div class="setting-item row-item">
+                        <label for="rainbow-mode">🌈 Rainbow Mode</label>
+                        <input type="checkbox" id="rainbow-mode">
+                    </div>
+                    <div class="setting-item row-item">
+                        <label for="hud-toggle">📈 Show HUD</label>
+                        <input type="checkbox" id="hud-toggle" checked>
+                    </div>
+                </div>
+            </details>
+
+            <details class="control-group">
+                <summary>📸 Capture</summary>
+                <div class="summary-content">
+                    <div class="source-buttons">
+                        <button id="btn-screenshot" title="Save PNG (C)">📸 Photo</button>
+                        <button id="btn-record" title="Record WebM (R)">⏺ Record</button>
+                    </div>
+                </div>
+            </details>
+
+            <div class="control-group">
+                <button id="btn-fullscreen">⛶ Toggle Fullscreen (F)</button>
+                <button id="btn-shortcuts">⌨️ Keyboard Shortcuts</button>
+            </div>
+
+            <footer class="panel-footer">
+                <img src="assets/cognix-favicon-64.png" alt="Cognix Studio" class="footer-logo">
+                Built by <strong>Abhi Raj Singh</strong> · Cognix Studio
+            </footer>
+        </div>
+    </div>
+
+    <!-- Hidden UI Revealer -->
+    <button id="btn-show-ui" style="display: none;">☰ Show Controls</button>
+
+    <!-- Keyboard shortcuts modal -->
+    <div id="shortcuts-modal" class="modal hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Keyboard Shortcuts</h2>
+                <button id="btn-close-shortcuts" class="icon-btn">✕</button>
+            </div>
+            <ul class="shortcuts-list">
+                <li><kbd>Space</kbd><span>Play / Pause</span></li>
+                <li><kbd>F</kbd><span>Toggle Fullscreen</span></li>
+                <li><kbd>H</kbd><span>Hide / Show UI</span></li>
+                <li><kbd>C</kbd><span>Take Screenshot</span></li>
+                <li><kbd>R</kbd><span>Start / Stop Recording</span></li>
+                <li><kbd>&larr;</kbd> / <kbd>&rarr;</kbd><span>Previous / Next Preset</span></li>
+                <li><kbd>1</kbd>–<kbd>9</kbd><span>Jump to Preset</span></li>
+                <li><kbd>M</kbd><span>Toggle Rainbow Mode</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
