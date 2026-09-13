@@ -87,7 +87,7 @@ export class AudioAnalyzer {
 
         // Simple beat detection based on bass spike
         this.isBeat = false;
-        if (currentBass > this.beatThreshold * this.smoothedBass && currentBass > 0.5) {
+        if (currentBass > this.beatThreshold * this.smoothedBass && currentBass > 0.35) {
             if (this.beatTimer <= 0) {
                 this.isBeat = true;
                 this.beatTimer = 20; // Prevent multiple triggers per beat
@@ -113,10 +113,10 @@ export class AudioAnalyzer {
     registerBeat() {
         const now = performance.now();
         this.beatTimes.push(now);
-        // Keep a rolling window of the last ~8 seconds of beats
-        this.beatTimes = this.beatTimes.filter(t => now - t < 8000);
+        // Keep a rolling window of the last ~10 seconds of beats
+        this.beatTimes = this.beatTimes.filter(t => now - t < 10000);
 
-        if (this.beatTimes.length > 3) {
+        if (this.beatTimes.length >= 3) {
             const intervals = [];
             for (let i = 1; i < this.beatTimes.length; i++) {
                 intervals.push(this.beatTimes[i] - this.beatTimes[i - 1]);
