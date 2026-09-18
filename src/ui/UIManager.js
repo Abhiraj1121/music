@@ -14,6 +14,7 @@ export class UIManager {
         this.initDOM();
         this.buildPresetGallery();
         this.applySavedSettings();
+        this.applyProfile();
         this.bindEvents();
         this.bindKeyboardShortcuts();
         this.bindDragAndDrop();
@@ -86,6 +87,31 @@ export class UIManager {
         this.waveformCtx = this.waveformCanvas.getContext('2d');
 
         this.presetGallery = document.getElementById('preset-gallery');
+        this.presetSearch = document.getElementById('preset-search');
+
+        // Connect / source monitor box
+        this.connectBox = document.getElementById('connect-box');
+        this.connectDot = document.getElementById('connect-dot');
+        this.connectSourceLabel = document.getElementById('connect-source-label');
+        this.connectSourceDetail = document.getElementById('connect-source-detail');
+        this.connectLevelFill = document.getElementById('connect-level-fill');
+        this.btnHideConnectBox = document.getElementById('btn-hide-connect-box');
+        this.btnShowConnectBox = document.getElementById('btn-show-connect-box');
+        this.btnMuteInput = document.getElementById('btn-mute-input');
+        this.btnDisconnectSource = document.getElementById('btn-disconnect-source');
+
+        // Profile
+        this.profileName = document.getElementById('profile-name');
+        this.profileColor = document.getElementById('profile-color');
+        this.btnSaveProfile = document.getElementById('btn-save-profile');
+        this.profileGreeting = document.getElementById('profile-greeting');
+        this.bootSub = document.getElementById('boot-sub');
+
+        // Extras
+        this.btnHideAll = document.getElementById('btn-hide-all');
+        this.hideAllHint = document.getElementById('hide-all-hint');
+        this.btnRandomize = document.getElementById('btn-randomize');
+        this.btnResetSettings = document.getElementById('btn-reset-settings');
     }
 
     buildPresetGallery() {
@@ -102,6 +128,14 @@ export class UIManager {
                 this.settings.set('preset', name);
             });
             this.presetGallery.appendChild(tile);
+        });
+    }
+
+    filterPresets(query) {
+        const q = query.trim().toLowerCase();
+        this.presetGallery.querySelectorAll('.preset-tile').forEach(tile => {
+            const label = tile.querySelector('.preset-name').textContent.toLowerCase();
+            tile.style.display = !q || label.includes(q) ? '' : 'none';
         });
     }
 
@@ -132,6 +166,56 @@ export class UIManager {
         this.autoCycleIntervalRow.style.display = s.autoCycle ? 'flex' : 'none';
         this.hudToggle.checked = s.showHud;
         this.hud.classList.toggle('hidden', !s.showHud);
+    }
+
+    applyProfile() {
+        const name = this.settings.get('profileName');
+        const color = this.settings.get('profileColor');
+        this.profileName.value = name || '';
+        this.profileColor.value = color || '#00ffff';
+        if (name) {
+            this.profileGreeting.textContent = `👋 Welcome back, ${name}`;
+            this.profileGreeting.style.display = 'block';
+            this.bootSub.textContent = `Welcome back, ${name} — real-time audio-reactive WebGL visuals`;
+        }
+    }
+
+    saveProfile() {
+        const name = this.profileName.value.trim().slice(0, 24);
+        const color = this.profileColor.value;
+        this.settings.set('profileName', name);
+        this.settings.set('profileColor', color);
+        this.applyProfile();
+        this.toast.success(name ? `Profile saved — hi, ${name}!` : 'Profile cleared');
+    }
+
+    toggleHideAll(hide) {
+        document.body.classList.toggle('zen-mode', hide);
+        this.uiContainer.classList.toggle('force-hidden', hide);
+        this.hud.classList.toggle('force-hidden', hide);
+        this.hideAllHint.classList.toggle('hidden', !hide);
+        this.btnShowUI.style.display = hide || !this.uiContainer.classList.contains('hidden') ? 'none' : 'block';
+    }
+
+    randomize() {
+        const names = this.visualizerEngine.getPresetList();
+        const name = names[Math.floor(Math.random() * names.length)];
+        const color = '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
+        this.visualizerEngine.setPreset(name);
+        this.visualizerEngine.setPrimaryColor(color);
+        this.rainbowMode.checked = false;
+        this.visualizerEngine.setRainbowMode(false);
+        this.primaryColor.value = color;
+        this.settings.set('preset', name);
+        this.settings.set('primaryColor', color);
+        this.settings.set('rainbowMode', false);
+        this.toast.info(`🎲 ${PRESET_META[name]?.label || name}`);
+    }
+
+    resetSettings() {
+        this.settings.reset();
+        this.applySavedSettings();
+        this.toast.info('Settings reset to defaults');
     }
 
     bindEvents() {
@@ -223,6 +307,40 @@ export class UIManager {
         this.btnShowUI.addEventListener('click', () => this.toggleUI(true));
         this.btnFullscreen.addEventListener('click', () => this.toggleFullscreen());
 
+        this.btnHideAll.addEventListener('click', () => this.toggleHideAll(true));
+        document.getElementById('visualizer-canvas').addEventListener('click', () => {
+            if (document.body.classList.contains('zen-mode')) this.toggleHideAll(false);
+        });
+
+        this.presetSearch.addEventListener('input', (e) => this.filterPresets(e.target.value));
+        this.btnRandomize.addEventListener('click', () => this.randomize());
+        this.btnResetSettings.addEventListener('click', () => {
+            if (confirm('Reset all settings to defaults?')) this.resetSettings();
+        });
+        this.btnSaveProfile.addEventListener('click', () => this.saveProfile());
+
+        // --- Connect / source monitor box ---
+        this.btnHideConnectBox.addEventListener('click', () => {
+            this.settings.set('hideConnectBox', true);
+            this.refreshConnectBox(this.audioManager.sourceType);
+        });
+        this.btnShowConnectBox.addEventListener('click', () => {
+            this.settings.set('hideConnectBox', false);
+            this.refreshConnectBox(this.audioManager.sourceType);
+        });
+        this.btnMuteInput.addEventListener('click', () => {
+            this.audioManager.toggleInputMute();
+            this.refreshConnectBox(this.audioManager.sourceType);
+            if (this.audioManager.sourceType === 'file') {
+                this.btnPlayPause.textContent = this.audioManager.audioElement.paused ? '▶' : '⏸';
+            }
+        });
+        this.btnDisconnectSource.addEventListener('click', () => {
+            this.audioManager.disconnectSource();
+            this.playbackControls.style.display = 'none';
+            this.toast.info('Audio source disconnected');
+        });
+
         this.btnShortcuts.addEventListener('click', () => this.shortcutsModal.classList.remove('hidden'));
         this.btnCloseShortcuts.addEventListener('click', () => this.shortcutsModal.classList.add('hidden'));
         this.shortcutsModal.addEventListener('click', (e) => {
@@ -273,6 +391,13 @@ export class UIManager {
                 }
                 case 'escape':
                     this.shortcutsModal.classList.add('hidden');
+                    if (document.body.classList.contains('zen-mode')) this.toggleHideAll(false);
+                    break;
+                case 'v':
+                    this.toggleHideAll(!document.body.classList.contains('zen-mode'));
+                    break;
+                case 's':
+                    this.randomize();
                     break;
                 default: {
                     const num = parseInt(e.key, 10);
@@ -380,6 +505,30 @@ export class UIManager {
         if (type !== 'file') {
             this.playbackControls.style.display = 'none';
         }
+        this.refreshConnectBox(type);
+    }
+
+    refreshConnectBox(type) {
+        if (!type) {
+            this.connectBox.style.display = 'none';
+            this.btnShowConnectBox.style.display = 'none';
+            return;
+        }
+        const info = this.audioManager.getSourceInfo();
+        const icons = { mic: '🎤', tab: '🖥️', file: '📁' };
+        this.connectDot.classList.toggle('muted', !!info.muted);
+        this.connectSourceLabel.textContent = `${icons[type] || '🎧'} ${type === 'mic' ? 'Microphone' : type === 'tab' ? 'Tab / Window Audio' : 'Local File'}`;
+        this.connectSourceDetail.textContent = info.label;
+        this.btnMuteInput.textContent = info.muted ? '▶ Resume Input' : '⏸ Pause Input';
+
+        const hideBox = this.settings.get('hideConnectBox');
+        this.connectBox.style.display = hideBox ? 'none' : 'flex';
+        this.btnShowConnectBox.style.display = hideBox ? 'block' : 'none';
+    }
+
+    updateConnectLevel(level) {
+        if (this.connectBox.style.display === 'none') return;
+        this.connectLevelFill.style.width = `${Math.min(100, Math.round((level || 0) * 140))}%`;
     }
 
     updateStatus(message, tone = 'idle') {
@@ -467,6 +616,7 @@ export class UIManager {
                 this.hudBpm.textContent = audio.bpm > 0 ? audio.bpm : '--';
                 const levelPct = Math.min(100, Math.round((audio.level || 0) * 140));
                 this.hudLevelFill.style.width = `${levelPct}%`;
+                this.updateConnectLevel(audio.level);
             }
         }, 200);
     }

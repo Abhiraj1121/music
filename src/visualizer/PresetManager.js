@@ -14,6 +14,11 @@ import { DNAHelix } from './presets/DNAHelix.js';
 import { CrystalShatter } from './presets/CrystalShatter.js';
 import { AuroraWaves } from './presets/AuroraWaves.js';
 import { GalaxySpiral } from './presets/GalaxySpiral.js';
+import { SpectrumRibbon } from './presets/SpectrumRibbon.js';
+import { StarfieldWarp } from './presets/StarfieldWarp.js';
+import { MetaballBlobs } from './presets/MetaballBlobs.js';
+import { GridWave } from './presets/GridWave.js';
+import { OrbitalRings } from './presets/OrbitalRings.js';
 
 export const PRESET_META = {
     'CosmicNebula':   { label: 'Cosmic Nebula',   icon: '🌌' },
@@ -31,7 +36,12 @@ export const PRESET_META = {
     'DNAHelix':       { label: 'DNA Helix',       icon: '🧬' },
     'CrystalShatter': { label: 'Crystal Shatter', icon: '💎' },
     'AuroraWaves':    { label: 'Aurora Waves',    icon: '🌠' },
-    'GalaxySpiral':   { label: 'Galaxy Spiral',   icon: '🌀' }
+    'GalaxySpiral':   { label: 'Galaxy Spiral',   icon: '🌀' },
+    'SpectrumRibbon': { label: 'Spectrum Ribbon', icon: '🎚️' },
+    'StarfieldWarp':  { label: 'Starfield Warp',  icon: '💫' },
+    'MetaballBlobs':  { label: 'Metaball Blobs',  icon: '🫧' },
+    'GridWave':       { label: 'Grid Wave',       icon: '🗺️' },
+    'OrbitalRings':   { label: 'Orbital Rings',   icon: '🪐' }
 };
 
 export class PresetManager {
@@ -53,7 +63,12 @@ export class PresetManager {
             'DNAHelix': DNAHelix,
             'CrystalShatter': CrystalShatter,
             'AuroraWaves': AuroraWaves,
-            'GalaxySpiral': GalaxySpiral
+            'GalaxySpiral': GalaxySpiral,
+            'SpectrumRibbon': SpectrumRibbon,
+            'StarfieldWarp': StarfieldWarp,
+            'MetaballBlobs': MetaballBlobs,
+            'GridWave': GridWave,
+            'OrbitalRings': OrbitalRings
         };
 
         this.currentPreset = null;

@@ -36,7 +36,7 @@
         <div class="boot-card">
             <img src="assets/cognix-logo.png" alt="Cognix Studio" class="boot-logo-img">
             <h1>Cognix <span>3D Audio Visualizer</span></h1>
-            <p class="boot-sub">Real-time, audio-reactive WebGL visuals</p>
+            <p class="boot-sub" id="boot-sub">Real-time, audio-reactive WebGL visuals</p>
             <div class="boot-actions">
                 <button id="boot-btn-file" class="btn-primary">📁 Choose an audio file</button>
                 <button id="boot-btn-mic" class="btn-secondary">🎤 Use microphone</button>
@@ -72,8 +72,10 @@
                     <img src="assets/cognix-favicon-64.png" alt="Cognix" class="header-logo">
                     <h1>Cognix Visualizer</h1>
                 </div>
+                <button id="btn-hide-all" class="icon-btn" title="Hide everything — big screen mode (V)">👁️</button>
                 <button id="btn-toggle-ui" class="icon-btn" title="Hide UI (H)">✕</button>
             </div>
+            <div class="profile-greeting" id="profile-greeting" style="display:none;"></div>
             <div class="audio-status" id="audio-status">No audio source</div>
             <canvas id="mini-waveform" width="300" height="36"></canvas>
         </header>
@@ -92,6 +94,21 @@
                         </div>
                     </div>
 
+                    <div class="connect-box" id="connect-box" style="display:none;">
+                        <div class="connect-box-header">
+                            <span class="connect-dot" id="connect-dot"></span>
+                            <span class="connect-box-title" id="connect-source-label">Not connected</span>
+                            <button id="btn-hide-connect-box" class="icon-btn tiny-btn" title="Hide this box">✕</button>
+                        </div>
+                        <div class="connect-box-sub" id="connect-source-detail">—</div>
+                        <div class="connect-level"><span class="connect-level-fill" id="connect-level-fill"></span></div>
+                        <div class="connect-box-actions">
+                            <button id="btn-mute-input" title="Pause reacting to this source without disconnecting it">⏸ Pause Input</button>
+                            <button id="btn-disconnect-source" title="Disconnect this audio source">⏻ Disconnect</button>
+                        </div>
+                    </div>
+                    <button id="btn-show-connect-box" class="full-btn ghost-btn" style="display:none;">👁️ Show Source Monitor</button>
+
                     <div class="control-group playback-controls" style="display: none;" id="playback-controls">
                         <div class="track-scrubber">
                             <span id="time-current">0:00</span>
@@ -109,10 +126,27 @@
                 </div>
             </details>
 
+            <details class="control-group">
+                <summary>👤 Local Profile</summary>
+                <div class="summary-content">
+                    <div class="setting-item">
+                        <label for="profile-name">Display name</label>
+                        <input type="text" id="profile-name" maxlength="24" placeholder="Your name">
+                    </div>
+                    <div class="setting-item row-item">
+                        <label for="profile-color">Favorite color</label>
+                        <input type="color" id="profile-color" value="#00ffff">
+                    </div>
+                    <button id="btn-save-profile" class="full-btn">💾 Save Profile</button>
+                </div>
+            </details>
+
             <details class="control-group" open>
                 <summary>🌌 Visualizer Preset</summary>
                 <div class="summary-content">
+                    <input type="text" id="preset-search" class="preset-search" placeholder="🔍 Search presets…">
                     <div id="preset-gallery" class="preset-gallery"></div>
+                    <button id="btn-randomize" class="full-btn">🎲 Randomize Preset & Color</button>
 
                     <div class="setting-item auto-cycle-row">
                         <label for="auto-cycle">🔀 Auto-cycle presets</label>
@@ -144,6 +178,7 @@
                         <label for="hud-toggle">📈 Show HUD</label>
                         <input type="checkbox" id="hud-toggle" checked>
                     </div>
+                    <button id="btn-reset-settings" class="full-btn ghost-btn">↺ Reset to Defaults</button>
                 </div>
             </details>
 
@@ -165,12 +200,14 @@
             <footer class="panel-footer">
                 <img src="assets/cognix-favicon-64.png" alt="Cognix Studio" class="footer-logo">
                 Built by <strong>Abhi Raj Singh</strong> · Cognix Studio
+                <a href="https://cognixstudio.github.io/" target="_blank" rel="noopener" class="studio-link">🔗 cognixstudio.github.io</a>
             </footer>
         </div>
     </div>
 
     <!-- Hidden UI Revealer -->
     <button id="btn-show-ui" style="display: none;">☰ Show Controls</button>
+    <div id="hide-all-hint" class="hide-all-hint hidden">Press <kbd>V</kbd> or click to return</div>
 
     <!-- Keyboard shortcuts modal -->
     <div id="shortcuts-modal" class="modal hidden">
@@ -188,6 +225,8 @@
                 <li><kbd>&larr;</kbd> / <kbd>&rarr;</kbd><span>Previous / Next Preset</span></li>
                 <li><kbd>1</kbd>–<kbd>9</kbd><span>Jump to Preset</span></li>
                 <li><kbd>M</kbd><span>Toggle Rainbow Mode</span></li>
+                <li><kbd>V</kbd><span>Hide All (big screen mode)</span></li>
+                <li><kbd>S</kbd><span>Randomize Preset & Color</span></li>
             </ul>
         </div>
     </div>

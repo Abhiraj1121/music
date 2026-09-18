@@ -9,7 +9,10 @@ const DEFAULTS = {
     volume: 0.8,
     autoCycle: false,
     autoCycleInterval: 20,
-    showHud: true
+    showHud: true,
+    profileName: '',
+    profileColor: '#00ffff',
+    hideConnectBox: false
 };
 
 export class SettingsStore {
@@ -46,5 +49,11 @@ export class SettingsStore {
 
     getAll() {
         return { ...this.data };
+    }
+
+    reset() {
+        const { profileName, profileColor } = this.data;
+        this.data = { ...DEFAULTS, profileName, profileColor };
+        this.save();
     }
 }

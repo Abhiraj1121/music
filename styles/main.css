@@ -289,7 +289,9 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
 }
+.header-top .icon-btn { flex-shrink: 0; }
 
 .header-brand {
     display: flex;
@@ -667,3 +669,152 @@ kbd {
 @media (max-width: 380px) {
     .preset-gallery { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ---------- New features ---------- */
+.profile-greeting {
+    font-size: 0.75rem;
+    color: var(--accent-color);
+    margin-top: 6px;
+}
+
+.preset-search {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--panel-border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+    outline: none;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+.preset-search:focus { border-color: var(--accent-color); background: rgba(255,255,255,0.1); }
+
+.full-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 9px 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--panel-border);
+    color: var(--text-primary);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.full-btn:hover { background: var(--accent-color); color: #001414; border-color: var(--accent-color); transform: translateY(-1px); }
+.full-btn.ghost-btn:hover { background: var(--danger-color); color: #fff; border-color: var(--danger-color); }
+
+.studio-link {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.68rem;
+    transition: color 0.2s ease;
+}
+.studio-link:hover { color: var(--accent-color); }
+.panel-footer { flex-wrap: wrap; }
+
+/* Big-screen "hide all" zen mode */
+.force-hidden {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(-10px) !important;
+}
+
+.hide-all-hint {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(8px);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    opacity: 0;
+    transition: opacity 0.4s ease 1.2s;
+    cursor: pointer;
+}
+body.zen-mode .hide-all-hint:not(.hidden) { opacity: 0.7; }
+body.zen-mode .hide-all-hint:not(.hidden):hover { opacity: 1; transition-delay: 0s; }
+.hide-all-hint.hidden { display: none; }
+body.zen-mode { cursor: none; }
+body.zen-mode:hover { cursor: default; }
+
+/* Smoother global interactions */
+button, input[type="range"], .preset-tile, details summary {
+    transition: all 0.18s ease;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+
+/* ---------- Source connect box ---------- */
+.connect-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-top: 10px;
+}
+.connect-box-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.connect-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--ok-color);
+    box-shadow: 0 0 6px var(--ok-color);
+    flex-shrink: 0;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.connect-dot.muted { background: var(--warn-color); box-shadow: 0 0 6px var(--warn-color); }
+.connect-box-title { flex: 1; font-size: 0.8rem; font-weight: 600; }
+.tiny-btn { width: 22px; height: 22px; font-size: 0.65rem; }
+.connect-box-sub {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    word-break: break-word;
+}
+.connect-level {
+    width: 100%;
+    height: 5px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.connect-level-fill {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-color), var(--ok-color));
+    transition: width 0.08s linear;
+}
+.connect-box-actions {
+    display: flex;
+    gap: 8px;
+}
+.connect-box-actions button {
+    flex: 1;
+    padding: 7px 8px;
+    font-size: 0.72rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--panel-border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    cursor: pointer;
+}
+.connect-box-actions button:hover { border-color: var(--accent-color); background: rgba(255,255,255,0.12); }
+#btn-disconnect-source:hover { border-color: var(--danger-color); color: var(--danger-color); }

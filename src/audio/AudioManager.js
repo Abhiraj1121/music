@@ -11,6 +11,7 @@ export class AudioManager {
 
         this.sourceType = null; // 'tab' | 'mic' | 'file'
         this.currentFileName = null;
+        this.inputMuted = false;
 
         this.capture = new AudioCapture(this);
         this.analyzer = new AudioAnalyzer();
@@ -131,6 +132,35 @@ export class AudioManager {
         }
     }
 
+    getSourceInfo() {
+        if (!this.sourceType) return null;
+        let label = '—';
+        if (this.sourceType === 'file') label = this.currentFileName || 'Local file';
+        else if (this.mediaStream) {
+            const track = this.mediaStream.getAudioTracks()[0];
+            label = (track && track.label) ? track.label : (this.sourceType === 'tab' ? 'Shared tab/window' : 'Default microphone');
+        }
+        return { type: this.sourceType, label, muted: this.inputMuted };
+    }
+
+    toggleInputMute() {
+        if (this.sourceType === 'file') {
+            return this.togglePlayPause() === false; // returns true if now paused
+        }
+        if (this.mediaStream) {
+            this.inputMuted = !this.inputMuted;
+            this.mediaStream.getAudioTracks().forEach(t => { t.enabled = !this.inputMuted; });
+            return this.inputMuted;
+        }
+        return false;
+    }
+
+    disconnectSource() {
+        this.cleanup();
+        this.onStatusChange('Disconnected', 'idle');
+        this.onSourceChange(null);
+    }
+
     setupAnalyzer(source = this.sourceNode) {
         this.analyzer.connect(this.audioContext, source);
     }
@@ -198,5 +228,6 @@ export class AudioManager {
         }
         this.sourceType = null;
         this.currentFileName = null;
+        this.inputMuted = false;
     }
 }
